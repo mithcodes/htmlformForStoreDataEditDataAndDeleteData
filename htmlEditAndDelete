@@ -1,0 +1,120 @@
+<html>
+  <body>
+    <form onsubmit="saveFormData(event)">
+      <label>Name</label>
+      <input type="text" id="username" required/>
+      
+      <label>Email</label>
+      <input type="email" id="emailId" required/>
+      
+      <label>Number</label>
+      <input type="tel" id="phoneNumber" required/>
+      
+      <input type="submit" value="Submit"/>
+    </form>
+
+    <ul id="formDataList"></ul>
+
+    <script>
+      var currentEditIndex = -1; // Track the index of the entry being edited
+
+      function saveFormData(event) {
+        event.preventDefault();
+
+        var name = document.getElementById('username').value;
+        var email = document.getElementById('emailId').value;
+        var number = document.getElementById('phoneNumber').value;
+
+        if (currentEditIndex === -1) {
+          // Add new entry
+          var formData = {
+            name: name,
+            email: email,
+            number: number
+          };
+
+          var existingData = JSON.parse(localStorage.getItem("formData")) || [];
+          existingData.push(formData);
+          localStorage.setItem("formData", JSON.stringify(existingData));
+        } else {
+          // Edit existing entry
+          var existingData = JSON.parse(localStorage.getItem("formData")) || [];
+
+          if (currentEditIndex >= 0 && currentEditIndex < existingData.length) {
+            existingData[currentEditIndex].name = name;
+            existingData[currentEditIndex].email = email;
+            existingData[currentEditIndex].number = number;
+          }
+
+          localStorage.setItem("formData", JSON.stringify(existingData));
+
+          // Reset the edit mode
+          currentEditIndex = -1;
+          document.querySelector('input[type="submit"]').value = "Submit";
+        }
+
+        document.getElementById('username').value = "";
+        document.getElementById('emailId').value = "";
+        document.getElementById('phoneNumber').value = "";
+
+        updateFormDataList();
+      }
+
+      function deleteEntry(index) {
+        var existingData = JSON.parse(localStorage.getItem("formData")) || [];
+        existingData.splice(index, 1);
+        localStorage.setItem("formData", JSON.stringify(existingData));
+        updateFormDataList();
+      }
+
+      function editEntry(index) {
+        var existingData = JSON.parse(localStorage.getItem("formData")) || [];
+        
+        if (index >= 0 && index < existingData.length) {
+          var entry = existingData[index];
+
+          document.getElementById('username').value = entry.name;
+          document.getElementById('emailId').value = entry.email;
+          document.getElementById('phoneNumber').value = entry.number;
+
+          currentEditIndex = index;
+          document.querySelector('input[type="submit"]').value = "Update";
+        }
+      }
+
+      function updateFormDataList() {
+        var formDataList = document.getElementById("formDataList");
+        formDataList.innerHTML = "";
+
+        var existingData = JSON.parse(localStorage.getItem("formData")) || [];
+
+        for (var i = 0; i < existingData.length; i++) {
+          var entry = existingData[i];
+
+          var listItem = document.createElement("li");
+          listItem.textContent = "Name: " + entry.name + ", Email: " + entry.email + ", Number: " + entry.number;
+
+          var editButton = document.createElement("button");
+          editButton.textContent = "Edit";
+          editButton.addEventListener("click", function() {
+            editEntry(i);
+          });
+
+          var deleteButton = document.createElement("button");
+          deleteButton.textContent = "Delete";
+          deleteButton.addEventListener("click", function() {
+            deleteEntry(i);
+          });
+
+          listItem.appendChild(editButton);
+          listItem.appendChild(deleteButton);
+          formDataList.appendChild(listItem);
+        }
+      }
+
+      window.onload = function() {
+        updateFormDataList();
+      };
+    </script>
+  </body>
+</html>
